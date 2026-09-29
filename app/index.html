@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Precursor: machine flight recorder</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"></span>
+      <h1>Precursor</h1>
+      <span id="machine-name" class="machine"></span>
+    </div>
+    <div class="status" role="status" aria-live="polite">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">Connecting to the recorder…</span>
+    </div>
+    <span id="mode-badge" class="badge" hidden></span>
+  </header>
+
+  <main class="layout">
+    <section id="live-view" class="stage" aria-label="Live recording">
+      <div class="gauges">
+        <div class="gauge health">
+          <span class="gauge-label">Machine health</span>
+          <strong id="health-value">--</strong>
+        </div>
+        <div class="gauge buffer">
+          <span class="gauge-label">Ring buffer</span>
+          <div class="bufbar" aria-hidden="true">
+            <div id="buf-fill" class="buf-fill"></div>
+            <div id="buf-preroll" class="buf-preroll"></div>
+          </div>
+          <span id="buf-text" class="gauge-note"></span>
+        </div>
+      </div>
+      <div id="tape" class="tape"></div>
+      <p class="legend">
+        Shaded band: normal range learned from the first minutes. Dashed lines: trigger threshold.
+        Trace turns amber, then orange, as a channel drifts further from normal.
+      </p>
+    </section>
+
+    <section id="incident-view" class="stage" aria-label="Incident replay" hidden></section>
+
+    <aside class="rail">
+      <div class="panel">
+        <h2>Sealed incidents</h2>
+        <ul id="incident-list" class="incidents"></ul>
+        <p id="incident-empty" class="empty">
+          Nothing recorded yet. When a channel leaves its normal range for several
+          samples in a row, the buffered seconds before it are sealed here.
+        </p>
+        <div class="chain">
+          <button id="verify-btn" class="btn subtle" type="button">Verify chain</button>
+          <span id="chain-status" class="chain-status"></span>
+        </div>
+      </div>
+      <div id="inject-panel" class="panel" hidden>
+        <h2>Inject a fault</h2>
+        <p class="hint">Simulation only. Pick a fault and watch which channel moves first.</p>
+        <div id="inject-buttons" class="inject"></div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

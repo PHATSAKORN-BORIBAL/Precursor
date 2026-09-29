@@ -1,0 +1,50 @@
+# Simulator ground truth (SIMULATION ONLY).
+#
+# Each fault is a set of per-channel effects. An effect ramps a channel by
+# `delta` (in the channel's unit) starting `lag_s` seconds after the fault
+# begins and reaching its full size after `ramp_s` more seconds.
+#
+# These are simplified, hand-written, physically *inspired* curves. They are
+# NOT a physical model of a real pump and were not fitted to real data.
+
+faults:
+  bearing_wear:
+    description: Bearing wear or lubrication loss. Friction shows up as vibration first, then heat, then extra motor load.
+    effects:
+      - {channel: vibration_g,      delta: 0.35, lag_s: 0,   ramp_s: 240}
+      - {channel: bearing_temp_c,   delta: 9.0,  lag_s: 60,  ramp_s: 240}
+      - {channel: motor_current_a,  delta: 0.5,  lag_s: 120, ramp_s: 240}
+
+  clogged_intake:
+    description: Partly blocked intake filter. Flow falls first, pressure and load follow, cavitation adds vibration and heat later.
+    effects:
+      - {channel: flow_lpm,               delta: -2.4,  lag_s: 0,   ramp_s: 200}
+      - {channel: discharge_pressure_kpa, delta: -55.0, lag_s: 20,  ramp_s: 200}
+      - {channel: motor_current_a,        delta: -0.6,  lag_s: 40,  ramp_s: 200}
+      - {channel: vibration_g,            delta: 0.15,  lag_s: 80,  ramp_s: 200}
+      - {channel: bearing_temp_c,         delta: 5.0,   lag_s: 120, ramp_s: 300}
+
+  brownout:
+    description: Supply voltage sag. Voltage drops first, the motor draws more current while flow and pressure fall a few seconds later.
+    effects:
+      - {channel: supply_voltage_v,        delta: -1.8, lag_s: 0,  ramp_s: 30}
+      - {channel: motor_current_a,         delta: 1.1,  lag_s: 8,  ramp_s: 30}
+      - {channel: flow_lpm,                delta: -0.8, lag_s: 16, ramp_s: 30}
+      - {channel: discharge_pressure_kpa,  delta: -20.0, lag_s: 24, ramp_s: 30}
+
+  discharge_blockage:
+    description: Discharge valve stuck nearly closed. Pressure spikes first, then flow collapses, load and vibration rise, heat builds slowly.
+    effects:
+      - {channel: discharge_pressure_kpa, delta: 70.0, lag_s: 0,   ramp_s: 60}
+      - {channel: flow_lpm,               delta: -3.0, lag_s: 10,  ramp_s: 60}
+      - {channel: motor_current_a,        delta: 0.9,  lag_s: 25,  ramp_s: 60}
+      - {channel: vibration_g,            delta: 0.12, lag_s: 40,  ramp_s: 60}
+      - {channel: bearing_temp_c,         delta: 4.0,  lag_s: 90,  ramp_s: 200}
+
+  # Deliberately NOT described in config/signatures.yaml. Used to check that
+  # the analyser says "unknown pattern" instead of forcing a wrong label.
+  mystery_heating:
+    description: Bearing temperature jumps with almost nothing else moving. Not in the signature library.
+    effects:
+      - {channel: bearing_temp_c,  delta: 12.0, lag_s: 0,  ramp_s: 90}
+      - {channel: motor_current_a, delta: 0.25, lag_s: 40, ramp_s: 90}

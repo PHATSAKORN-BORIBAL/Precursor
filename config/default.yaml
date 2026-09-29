@@ -1,0 +1,77 @@
+# Precursor - default configuration.
+# Everything here can be changed without touching code. Secrets do NOT belong
+# in this file; use environment variables (see .env.example).
+
+machine:
+  id: pump-rig-01
+  name: "Lab pump rig (simulated)"
+  # Each channel is one sensor stream. `min_sigma` is a floor for the learned
+  # noise level so a very quiet sensor cannot produce absurd z-scores.
+  # The `sim` block is only used by the built-in simulator.
+  channels:
+    - name: motor_current_a
+      label: Motor current
+      unit: A
+      min_sigma: 0.02
+      sim: {nominal: 4.2, noise_sd: 0.05}
+    - name: vibration_g
+      label: Vibration
+      unit: g
+      min_sigma: 0.008
+      sim: {nominal: 0.30, noise_sd: 0.02}
+    - name: bearing_temp_c
+      label: Bearing temperature
+      unit: "°C"
+      min_sigma: 0.06
+      sim: {nominal: 48.0, noise_sd: 0.15}
+    - name: supply_voltage_v
+      label: Supply voltage
+      unit: V
+      min_sigma: 0.012
+      sim: {nominal: 12.0, noise_sd: 0.03}
+    - name: flow_lpm
+      label: Coolant flow
+      unit: L/min
+      min_sigma: 0.02
+      sim: {nominal: 6.0, noise_sd: 0.05}
+    - name: discharge_pressure_kpa
+      label: Discharge pressure
+      unit: kPa
+      min_sigma: 0.4
+      sim: {nominal: 180.0, noise_sd: 1.0}
+
+detection:
+  # Samples used to learn the healthy baseline (median / MAD) at start-up.
+  warmup_samples: 240
+  # A channel "alarms" when |z| > z_trigger for persist_samples in a row.
+  z_trigger: 4.0
+  persist_samples: 5
+  # A latched channel is released after clear_samples consecutive |z| < z_clear.
+  z_clear: 2.0
+  clear_samples: 30
+  # Slow baseline adaptation (only while a channel is calm and not latched).
+  adapt_alpha: 0.002
+  # Recording window around a trigger, in seconds of sample time.
+  pre_roll_s: 300
+  post_roll_s: 180
+  ring_capacity_s: 900
+  # Two-sided CUSUM used to locate when each channel started to move.
+  # k=1.5 / h=12 were chosen from a false-onset sweep on simulated coloured
+  # noise (see docs/DESIGN_DECISIONS.md); textbook k=0.5 / h=8 fired constantly.
+  cusum_k: 1.5
+  cusum_h: 12.0
+  # Onsets closer than this are treated as "simultaneous".
+  onset_tolerance_s: 4.0
+  # A pattern match below this score is reported as "unknown_pattern".
+  min_confidence: 0.55
+  # If the runner-up scores within this margin the verdict is flagged ambiguous.
+  ambiguity_margin: 0.10
+
+server:
+  host: 127.0.0.1
+  port: 8000
+  db_path: data/precursor.db
+  mode: simulate          # simulate | ingest
+  sim_speed: 20           # simulated samples per wall-clock second
+  sim_seed: 42
+  sim_auto_faults: true   # simulator injects a random fault every few minutes

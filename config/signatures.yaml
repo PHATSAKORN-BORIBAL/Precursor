@@ -1,0 +1,61 @@
+# Diagnosis signature library (a design proposal, hand-written).
+#
+# A signature is the EXPECTED ORDER in which channels leave their baseline for
+# a known fault, with the direction of each move. No magnitudes are stored.
+# The analyser compares the observed order of onsets against each signature.
+#
+# Matching is heuristic. Ordering is evidence of sequence, not proof of cause.
+
+signatures:
+  bearing_wear:
+    title: Bearing wear / lubrication loss
+    summary: Mechanical friction appears first as vibration, then as heat, then as extra motor load.
+    sequence:
+      - {channel: vibration_g,     direction: up}
+      - {channel: bearing_temp_c,  direction: up}
+      - {channel: motor_current_a, direction: up}
+    checks:
+      - Inspect and re-grease the bearing; check for audible grinding.
+      - Check shaft alignment and belt or coupling tension.
+      - Compare vibration spectrum with a known-good reference if available.
+
+  clogged_intake:
+    title: Clogged or restricted intake
+    summary: Flow and pressure fall first, the motor unloads, then cavitation adds vibration and heat.
+    sequence:
+      - {channel: flow_lpm,               direction: down}
+      - {channel: discharge_pressure_kpa, direction: down}
+      - {channel: motor_current_a,        direction: down}
+      - {channel: vibration_g,            direction: up}
+      - {channel: bearing_temp_c,         direction: up}
+    checks:
+      - Inspect and clean the intake filter or strainer.
+      - Check suction line for kinks, air leaks or a partly closed valve.
+      - Listen for cavitation noise (gravel-like sound).
+
+  brownout:
+    title: Supply voltage sag (brownout)
+    summary: Voltage falls first, the motor compensates with more current, hydraulic output drops afterwards.
+    sequence:
+      - {channel: supply_voltage_v,       direction: down}
+      - {channel: motor_current_a,        direction: up}
+      - {channel: flow_lpm,               direction: down}
+      - {channel: discharge_pressure_kpa, direction: down}
+    checks:
+      - Measure supply voltage under load at the machine terminals.
+      - Check the power supply, connectors and cable length or gauge.
+      - Look for other loads that switch on at the same time.
+
+  discharge_blockage:
+    title: Discharge blockage (closed or stuck valve)
+    summary: Pressure spikes first, flow collapses, then load, vibration and heat rise.
+    sequence:
+      - {channel: discharge_pressure_kpa, direction: up}
+      - {channel: flow_lpm,               direction: down}
+      - {channel: motor_current_a,        direction: up}
+      - {channel: vibration_g,            direction: up}
+      - {channel: bearing_temp_c,         direction: up}
+    checks:
+      - Check that the discharge valve is open and not stuck.
+      - Inspect downstream piping and any filter for blockage.
+      - Verify the pressure relief path works.
